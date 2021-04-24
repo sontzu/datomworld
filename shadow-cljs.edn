@@ -7,7 +7,7 @@
  :dependencies
  [[reagent "1.0.0"]]
 
- :dev-http {3000 "public"}
+ :dev-http {9000 "public"}
  
  :builds
  {:datomworld
