@@ -24,6 +24,7 @@
                                                  (a/put! c [lon lat])))))
                      c)))
 
+;;https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
 (def init-openlayer (let [full-screen? (atom false)]
                       (fn [{:keys [dom-id]}]
 
