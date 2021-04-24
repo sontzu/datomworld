@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
             ["ol" :as ol]
+            ["ol/interaction" :as ol.interaction] 
             ["ol/layer/Tile"  :default ol.layer.Tile]
             ["ol/layer/Vector" :default ol.layer.VectorLayer]
             ["ol/source" :as ol.source]
@@ -33,8 +34,8 @@
                                     vector-layer
                                     ]
                         :view (ol/View. #js{:center (ol.proj/fromLonLat #js[109.22367 13.77648 ])
-                                            :zoom 0})})
-        ]
+                                            :zoom 0})
+                        :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})]
     (ol/Map. param)))
 
 (defn init-materialize-ui []
