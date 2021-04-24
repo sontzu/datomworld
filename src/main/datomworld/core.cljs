@@ -17,10 +17,11 @@
 
 (def get-lon-lat (let [c (a/chan)]
                    (fn []
-                     (.. js/navigator.geolocation (getCurrentPosition (fn [position]
-                                                                        (let [lon (.-longitude position.coords)
-                                                                              lat (.-latitude position.coords)]
-                                                                          (a/put! c [lon lat])))))
+                     (.. js/navigator.geolocation
+                         (getCurrentPosition (fn [position]
+                                               (let [lon (.-longitude position.coords)
+                                                     lat (.-latitude position.coords)]
+                                                 (a/put! c [lon lat])))))
                      c)))
 
 (def init-openlayer (let [full-screen? (atom false)]
@@ -40,20 +41,14 @@
                               lon-lat-ch (get-lon-lat)
                               ]
                           (a/go
-                            (let [[lon lat] (a/<! lon-lat-ch)
-                                  _ (prn "lon-lat=" [lon lat])
-                                  center (ol.proj/fromLonLat (clj->js [lon lat])  #_#js[109.22367 13.77648] #_#js[109.2236946 13.7519727])
-                                  foo  (ol/View. (clj->js {:center center
-                                                          :zoom 10}))
-                                  _ (prn "foo")
-                                  param #js{:target dom-id
-                                            :layers #js[(ol.layer.Tile. #js{:source (ol.source/OSM.)})
-                                                        vector-layer]
-                                            :view (ol/View. #js{:center (ol.proj/fromLonLat #_lon-lat  #js[109.22367 13.77648] #_#js[109.2236946 13.7519727])
-                                                                :zoom 10})
-                                            :interactions (ol.interaction/defaults #js{:doubleClickZoom false})}
-                                  ol-map (ol/Map. param)
-                                  ]
+                            (let [lon-lat (a/<! lon-lat-ch)
+                                  param (clj->js {:target dom-id
+                                                 :layers #js[(ol.layer.Tile. #js{:source (ol.source/OSM.)})
+                                                             vector-layer]
+                                                 :view (ol/View. (clj->js {:center (ol.proj/fromLonLat (clj->js lon-lat))
+                                                                           :zoom 15}))
+                                                 :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
+                                  ol-map (ol/Map. param)]
                               (.. ol-map (on "dblclick" (fn []
                                                           (if @full-screen?
                                                             (do
