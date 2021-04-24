@@ -1,0 +1,17 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src/dev"
+  "src/main"
+  "src/test"]
+
+ :dependencies
+ [[reagent "1.0.0"]]
+
+ :dev-http {3000 "public"}
+ 
+ :builds
+ {:datomworld
+  {:target :browser
+   :modules {:main {:init-fn datomworld.core/init}}}}}
+
+

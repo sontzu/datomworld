@@ -1,0 +1,13 @@
+{
+  "name": "datomworld",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "shadow-cljs": "2.12.5"
+  },
+  "dependencies": {
+    "ol": "^6.5.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1"
+  }
+}

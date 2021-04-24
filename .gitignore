@@ -12,3 +12,8 @@ pom.xml.asc
 .lein-failures
 .nrepl-port
 .cpcache/
+.shadow-cljs/
+public/js/
+*~
+node_modules/
+package-lock.json
