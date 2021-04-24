@@ -12,16 +12,7 @@
             ["ol/style" :refer [Icon Style]]
             ))
 
-;;import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
-
 (enable-console-print!)
-
-#_(js/console.log (Icon. #js{:crossOrigin "anonymous"
-                           :imgSize #js[20 20]
-                           :color "red"
-                           :src "https://openlayers.org/en/latest/examples/data/square.svg"
-                           }))
-
 
 (defn init-openlayer [{:keys [dom-id]}]
   (let [rome (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[12.5, 41.9]))})
@@ -85,9 +76,9 @@
                                                       (init-materialize-ui))
                                :reagent-render (fn []
                                                  [:div {:style {:width "100%" :height "100%"}}
-                                                  [nav-bar]
+                                                  ;;[nav-bar]
                                                   [:div#map {:style {:width "100%"  :height "100%" :margin-top 1 }}]])}))
-
+[]
 
 
 (defn init []
