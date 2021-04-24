@@ -15,32 +15,39 @@
 
 (enable-console-print!)
 
-(defn init-openlayer [{:keys [dom-id]}]
-  (let [rome (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[12.5, 41.9]))})
-        london (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[-0.12755, 51.507222]))})
-        red-square (Style. #js{:image (Icon. #js{:color "red"
-                                                 :crossOrigin "anonymous"
-                                                 :imgSize #js[20 20]
-                                                 :src "https://openlayers.org/en/latest/examples/data/square.svg"})})
-        _ (.setStyle rome red-square)
-        _ (.setStyle london red-square)
-        
-        vector-source (VectorSource. #js{:features #js[rome london]})
-        vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
+(def init-openlayer (let [full-screen? (atom false)]
+                      (fn [{:keys [dom-id]}]
+                        (let [rome (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[12.5, 41.9]))})
+                              london (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[-0.12755, 51.507222]))})
+                              red-square (Style. #js{:image (Icon. #js{:color "red"
+                                                                       :crossOrigin "anonymous"
+                                                                       :imgSize #js[20 20]
+                                                                       :src "https://openlayers.org/en/latest/examples/data/square.svg"})})
+                              _ (.setStyle rome red-square)
+                              _ (.setStyle london red-square)
+                              
+                              vector-source (VectorSource. #js{:features #js[rome london]})
+                              vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
 
-        param (clj->js {:target dom-id
-                        :layers #js[
-                                    (ol.layer.Tile. #js{:source (ol.source/OSM.)})
-                                    vector-layer
-                                    ]
-                        :view (ol/View. #js{:center (ol.proj/fromLonLat #js[109.22367 13.77648 ])
-                                            :zoom 0})
-                        :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
-        ol-map (ol/Map. param)]
-    (.. ol-map (on "dblclick" (fn []
-                                (js/document.documentElement.requestFullscreen)
-                                )))
-    ol-map))
+                              param (clj->js {:target dom-id
+                                              :layers #js[
+                                                          (ol.layer.Tile. #js{:source (ol.source/OSM.)})
+                                                          vector-layer
+                                                          ]
+                                              :view (ol/View. #js{:center (ol.proj/fromLonLat #js[109.22367 13.77648 ])
+                                                                  :zoom 0})
+                                              :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
+                              ol-map (ol/Map. param)]
+                          (.. ol-map (on "dblclick" (fn []
+                                                      (if @full-screen?
+                                                        (do
+                                                          (js/alert "Exit Full Screen")
+                                                          (js/document.exitFullscreen))
+                                                        (do
+                                                          (js/alert "Enter Full Screen")
+                                                          (js/document.documentElement.requestFullscreen)))
+                                                      (swap! full-screen? not))))
+                          ol-map))))
 
 (defn init-materialize-ui []
   (js/M.AutoInit)
@@ -83,6 +90,7 @@
                                :reagent-render (fn []
                                                  [:div {:style {:width "100%" :height "100%"}}
                                                   ;;[nav-bar]
+                                                  
                                                   [:div#map {:style {:width "100%"  :height "100%" :margin-top 1 }}]])}))
 []
 
