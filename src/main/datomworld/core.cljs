@@ -35,8 +35,12 @@
                                     ]
                         :view (ol/View. #js{:center (ol.proj/fromLonLat #js[109.22367 13.77648 ])
                                             :zoom 0})
-                        :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})]
-    (ol/Map. param)))
+                        :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
+        ol-map (ol/Map. param)]
+    (.. ol-map (on "dblclick" (fn []
+                                (js/document.documentElement.requestFullscreen)
+                                )))
+    ol-map))
 
 (defn init-materialize-ui []
   (js/M.AutoInit)
@@ -73,6 +77,7 @@
      [:a {:href "mobile.html"} "Mobile"]]]])
 
 (def map-view (r/create-class {:component-did-mount (fn [this-component]
+
                                                       (init-openlayer {:dom-id "map"})
                                                       (init-materialize-ui))
                                :reagent-render (fn []
