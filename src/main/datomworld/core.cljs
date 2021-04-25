@@ -28,15 +28,13 @@
 ;;https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
 (def init-openlayer (let [full-screen? (atom false)
                           rome (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[12.5 41.9]))})
-                          london (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[-0.12755 51.507222]))})
                           red-square (Style. #js{:image (Icon. #js{:color "red"
                                                                    :crossOrigin "anonymous"
                                                                    :imgSize #js[20 20]
                                                                    :src "https://openlayers.org/en/latest/examples/data/square.svg"})})
                           _ (.setStyle rome red-square)
-                          _ (.setStyle london red-square)
                           
-                          vector-source (VectorSource. #js{:features #js[rome london]})
+                          vector-source (VectorSource. #js{:features #js[rome]})
                           vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
                           lon-lat-ch (get-lon-lat)]
                       (fn [{:keys [dom-id]}]
