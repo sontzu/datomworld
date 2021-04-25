@@ -38,7 +38,8 @@
                       (fn [{:keys [dom-id]}]
                         (a/go
                           (let [lon-lat (clj->js (a/<! lon-lat-ch))
-                                current-point (ol.Feature. (clj->js {:geometry (ol.geom.Point. (fromLonLat lon-lat))}))
+                                here-pt (ol.geom.Point. (fromLonLat lon-lat))
+                                current-point (ol.Feature. (clj->js {:geometry here-pt}))
                                 _ (.setStyle current-point red-square)
                                 _ (.. vector-source (addFeature current-point))
                                 param (clj->js {:target dom-id
