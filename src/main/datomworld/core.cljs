@@ -24,26 +24,27 @@
                                                  (a/put! c [lon lat])))))
                      c)))
 
-
 ;;https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
 (def init-openlayer (let [full-screen? (atom false)
-                          current-point (ol.Feature. #js{:geometry (ol.geom.Point. (fromLonLat #js[12.5 41.9]))})
                           red-square (Style. #js{:image (Icon. #js{:color "red"
                                                                    :crossOrigin "anonymous"
                                                                    :imgSize #js[20 20]
-                                                                   :src "https://openlayers.org/en/latest/examples/data/square.svg"})})
-                          _ (.setStyle current-point red-square)
+                                                                   :src "https://openlayers.org/en/latest/examples/data/square.svg"
+                                                                   })})
                           
-                          vector-source (VectorSource. #js{:features #js[current-point]})
+                          vector-source (VectorSource.)
                           vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
                           lon-lat-ch (get-lon-lat)]
                       (fn [{:keys [dom-id]}]
                         (a/go
-                          (let [lon-lat (a/<! lon-lat-ch)
+                          (let [lon-lat (clj->js (a/<! lon-lat-ch))
+                                current-point (ol.Feature. (clj->js {:geometry (ol.geom.Point. (fromLonLat lon-lat))}))
+                                _ (.setStyle current-point red-square)
+                                _ (.. vector-source (addFeature current-point))
                                 param (clj->js {:target dom-id
                                                 :layers #js[(ol.layer.Tile. #js{:source (ol.source/OSM.)})
                                                             vector-layer]
-                                                :view (ol/View. (clj->js {:center (ol.proj/fromLonLat (clj->js lon-lat))
+                                                :view (ol/View. (clj->js {:center (ol.proj/fromLonLat lon-lat)
                                                                           :zoom 15}))
                                                 :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
                                 ol-map (ol/Map. param)]
