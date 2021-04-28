@@ -6,7 +6,8 @@
 
  :dependencies
  [[org.clojure/core.async "1.3.610"]
-  [reagent "1.0.0"]]
+  [reagent "1.0.0"]
+  [cljs-bean "1.7.0"]]
 
  :dev-http {9000 "public"}
  
