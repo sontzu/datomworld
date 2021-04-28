@@ -24,6 +24,8 @@
                                                  (a/put! c [lon lat])))))
                      c)))
 
+(def here-pt (ol.geom.Point. (fromLonLat #js[0 0])))
+
 ;;https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
 (def init-openlayer (let [full-screen? (atom false)
                           red-square (Style. #js{:image (Icon. #js{:color "red"
@@ -35,10 +37,24 @@
                           vector-source (VectorSource.)
                           vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
                           lon-lat-ch (get-lon-lat)]
+                      (js/navigator.geolocation.watchPosition (fn [pos]
+                                                                (let [lon (aget pos "coords" "longitude")
+                                                                      lat (aget pos "coords" "latitude")]
+                                                                  (js/console.log pos)
+                                                                  (.. here-pt (setCoordinates (fromLonLat #js[lon lat])))))
+                                                              #(prn %)
+                                                              {:enableHighAccuracy false,
+                                                               :timeout 5000,
+                                                               :maximumAge 0})
+                      
                       (fn [{:keys [dom-id]}]
                         (a/go
                           (let [lon-lat (clj->js (a/<! lon-lat-ch))
-                                here-pt (ol.geom.Point. (fromLonLat lon-lat))
+                                ;;_ (prn lon-lat)
+                                _ (js/console.log "here-pt" here-pt)
+                                ;;here-pt (ol.geom.Point. (fromLonLat lon-lat))
+                                _ (.. here-pt (setCoordinates (fromLonLat #js[109.2236946 13.7519727])))
+                                _ (js/console.log "here-pt2" here-pt)
                                 current-point (ol.Feature. (clj->js {:geometry here-pt}))
                                 _ (.setStyle current-point red-square)
                                 _ (.. vector-source (addFeature current-point))
