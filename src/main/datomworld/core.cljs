@@ -46,30 +46,27 @@
                           
                           vector-source (VectorSource.)
                           vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
-                          lon-lat-ch (get-lon-lat)
-                          here-pt (ol.geom.Point. (fromLonLat #js[0 0]))]
-                      
+                          here-pt (ol.geom.Point. (fromLonLat #js[0 0]))
+                          view (ol/View. (clj->js {:center (ol.proj/fromLonLat #js[0 0])
+                                                   :zoom 15}))]
                       
                       (m/on :here (fn [[_ {:keys [longitude latitude]} :as msg]]
                                     (prn msg)
-                                    (.. here-pt (setCoordinates (fromLonLat (clj->js [longitude latitude]))))))
+                                    (let [lon-lat (clj->js [longitude latitude])
+                                          coords (fromLonLat lon-lat)]
+                                      (.. here-pt (setCoordinates coords))
+                                      (.. view (animate (clj->js {:center coords
+                                                                  :duration 500}))))))
                       
                       (fn [{:keys [dom-id]}]
                         (a/go
-                          (let [lon-lat (clj->js (a/<! lon-lat-ch))
-                                ;;_ (prn lon-lat)
-                                _ (js/console.log "here-pt" here-pt)
-                                ;;here-pt (ol.geom.Point. (fromLonLat lon-lat))
-                                _ (.. here-pt (setCoordinates (fromLonLat #js[109.2236946 13.7519727])))
-                                _ (js/console.log "here-pt2" here-pt)
-                                current-point (ol.Feature. (clj->js {:geometry here-pt}))
+                          (let [current-point (ol.Feature. (clj->js {:geometry here-pt}))
                                 _ (.setStyle current-point red-square)
                                 _ (.. vector-source (addFeature current-point))
                                 param (clj->js {:target dom-id
                                                 :layers #js[(ol.layer.Tile. #js{:source (ol.source/OSM.)})
                                                             vector-layer]
-                                                :view (ol/View. (clj->js {:center (ol.proj/fromLonLat lon-lat)
-                                                                          :zoom 15}))
+                                                :view view
                                                 :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
                                 ol-map (ol/Map. param)]
                             (.. ol-map (on "dblclick" (fn []
