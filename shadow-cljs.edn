@@ -5,9 +5,10 @@
   "src/test"]
 
  :dependencies
- [[org.clojure/core.async "1.3.610"]
+ [[cljs-bean "1.7.0"]
+  [org.clojure/core.async "1.3.610"]
   [reagent "1.0.0"]
-  [cljs-bean "1.7.0"]]
+  [stigmergy/mercury "0.1.2-SNAPSHOT"]]
 
  :dev-http {9000 "public"}
  

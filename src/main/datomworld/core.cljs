@@ -2,6 +2,8 @@
   (:require [clojure.core.async :as a :include-macros true]
             [reagent.core :as r]
             [reagent.dom :as rdom]
+            [stigmergy.mercury :as m]
+            
             ["ol" :as ol]
             ["ol/interaction" :as ol.interaction] 
             ["ol/layer/Tile"  :default ol.layer.Tile]
@@ -15,6 +17,16 @@
 
 (enable-console-print!)
 
+(js/navigator.geolocation.watchPosition (fn [pos]
+                                          (let [lon (aget pos "coords" "longitude")
+                                                lat (aget pos "coords" "latitude")]
+                                            (m/broadcast [:here {:latitude lat
+                                                                 :longitude lon}])))
+                                        #(prn %)
+                                        #js{:enableHighAccuracy true
+                                            :timeout 5000
+                                            :maximumAge 0})
+
 (def get-lon-lat (let [c (a/chan)]
                    (fn []
                      (.. js/navigator.geolocation
@@ -23,8 +35,6 @@
                                                      lat (.-latitude position.coords)]
                                                  (a/put! c [lon lat])))))
                      c)))
-
-(def here-pt (ol.geom.Point. (fromLonLat #js[0 0])))
 
 ;;https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
 (def init-openlayer (let [full-screen? (atom false)
@@ -36,16 +46,13 @@
                           
                           vector-source (VectorSource.)
                           vector-layer (ol.layer.VectorLayer. #js{:source vector-source})
-                          lon-lat-ch (get-lon-lat)]
-                      (js/navigator.geolocation.watchPosition (fn [pos]
-                                                                (let [lon (aget pos "coords" "longitude")
-                                                                      lat (aget pos "coords" "latitude")]
-                                                                  (js/console.log pos)
-                                                                  (.. here-pt (setCoordinates (fromLonLat #js[lon lat])))))
-                                                              #(prn %)
-                                                              {:enableHighAccuracy false,
-                                                               :timeout 5000,
-                                                               :maximumAge 0})
+                          lon-lat-ch (get-lon-lat)
+                          here-pt (ol.geom.Point. (fromLonLat #js[0 0]))]
+                      
+                      
+                      (m/on :here (fn [[_ {:keys [longitude latitude]} :as msg]]
+                                    (prn msg)
+                                    (.. here-pt (setCoordinates (fromLonLat (clj->js [longitude latitude]))))))
                       
                       (fn [{:keys [dom-id]}]
                         (a/go
@@ -119,10 +126,7 @@
                                                   ;;[nav-bar]
                                                   
                                                   [:div#map {:style {:width "100%"  :height "100%" :margin-top 1 }}]])}))
-[]
-
 
 (defn init []
   (let [app (js/document.getElementById "app")]
     (rdom/render [map-view] app)))
-
