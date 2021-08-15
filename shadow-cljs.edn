@@ -15,6 +15,9 @@
  :builds
  {:datomworld
   {:target :browser
+   :devtools {:devtools-url "https://beta.datom.world/shadow-cljs"
+              :use-document-protocol true}
+   
    :modules {:main {:init-fn datomworld.core/init}}}}}
 
 
