@@ -5,6 +5,7 @@
             [stigmergy.mercury :as m]
             
             ["ol" :as ol]
+            ["ol/coordinate" :as ol.coordinate]
             ["ol/interaction" :as ol.interaction] 
             ["ol/layer/Tile"  :default ol.layer.Tile]
             ["ol/layer/Vector" :default ol.layer.VectorLayer]
@@ -17,7 +18,7 @@
 
 (enable-console-print!)
 
-(js/navigator.geolocation.watchPosition (fn [pos]
+#_(js/navigator.geolocation.watchPosition (fn [pos]
                                           (let [lon (aget pos "coords" "longitude")
                                                 lat (aget pos "coords" "latitude")]
                                             (m/broadcast [:here {:latitude lat
@@ -49,9 +50,46 @@
     (.setStyle feature red-square)
     feature))
 
-(defn add-agent-to-map [agent]
-   (.. vector-source (addFeature agent)))
+(def agents (atom []))
 
+(defn add-agent-to-map [agent]
+  (.. vector-source (addFeature agent))
+  (swap! agents conj agent))
+
+
+(defn animate []
+  (a/go-loop []
+    (a/<! (a/timeout 500))
+    (doseq [feature @agents
+            :let [coord (.. feature getGeometry getCoordinates)
+                  [x y] coord
+                  delta-x (rand-int 10000)
+                  delta-x (if (even? delta-x)
+                            delta-x
+                            (- 0 delta-x))
+                  delta-y (rand-int 10000)
+                  delta-y (if (even? delta-y)
+                            delta-y
+                            (- 0 delta-y))
+                  pt (ol.geom.Point. (clj->js [(+ x delta-x) (+ y delta-y)]))
+
+                  ]]
+      (.. feature (setGeometry pt)))
+    (recur)))
+
+
+(comment
+  (doseq [feature @agents
+          :let [coord (.. feature getGeometry getCoordinates)
+                [x y] coord
+                
+                pt (ol.geom.Point. #js[(+ x 1000) (+ y 1000)])]]
+    (.. feature (setGeometry pt))
+    )
+  
+  
+
+  )
 ;;https://gis.stackexchange.com/questions/214400/dynamically-update-position-of-geolocation-marker-in-openlayers-3
 (def init-openlayer (let [full-screen? (atom false)
                           red-square (Style. #js{:image (Icon. #js{:color "red"
@@ -89,7 +127,7 @@
                                                 :interactions (ol.interaction/defaults #js{:doubleClickZoom false})})
                                 ol-map (ol/Map. param)]
 
-                            (doseq [i (range 10)
+                            (doseq [i (range 100)
                                     :let [r1 (rand 2)
                                           r2 (rand 2)
                                           lon-lat [(+ 107 r1) (+ 15 r2)]
@@ -144,7 +182,8 @@
 (def map-view (r/create-class {:component-did-mount (fn [this-component]
 
                                                       (init-openlayer {:dom-id "map"})
-                                                      (init-materialize-ui))
+                                                      (init-materialize-ui)
+                                                      (animate))
                                :reagent-render (fn []
                                                  [:div {:style {:width "100%" :height "100%"}}
                                                   ;;[nav-bar]
