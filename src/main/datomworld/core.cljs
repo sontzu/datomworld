@@ -19,14 +19,14 @@
 (enable-console-print!)
 
 #_(js/navigator.geolocation.watchPosition (fn [pos]
-                                          (let [lon (aget pos "coords" "longitude")
-                                                lat (aget pos "coords" "latitude")]
-                                            (m/broadcast [:here {:latitude lat
-                                                                 :longitude lon}])))
-                                        #(prn %)
-                                        #js{:enableHighAccuracy true
-                                            :timeout 5000
-                                            :maximumAge 0})
+                                            (let [lon (aget pos "coords" "longitude")
+                                                  lat (aget pos "coords" "latitude")]
+                                              (m/broadcast [:here {:latitude lat
+                                                                   :longitude lon}])))
+                                          #(prn %)
+                                          #js{:enableHighAccuracy true
+                                              :timeout 5000
+                                              :maximumAge 0})
 
 (def get-lon-lat (let [c (a/chan)]
                    (fn []
@@ -107,13 +107,13 @@
                                                    :zoom 10}))]
                       
                       #_(m/on :here (fn [[_ {:keys [longitude latitude]} :as msg]]
-                                    (prn msg)
-                                    (let [lon-lat (clj->js [longitude latitude])
-                                          coords (fromLonLat lon-lat)]
-                                      (.. here-pt (setCoordinates coords))
-                                      (prn "lon-lat=" lon-lat)
-                                      (.. view (animate (clj->js {:center coords
-                                                                  :duration 500}))))))
+                                      (prn msg)
+                                      (let [lon-lat (clj->js [longitude latitude])
+                                            coords (fromLonLat lon-lat)]
+                                        (.. here-pt (setCoordinates coords))
+                                        (prn "lon-lat=" lon-lat)
+                                        (.. view (animate (clj->js {:center coords
+                                                                    :duration 500}))))))
                       
                       (fn [{:keys [dom-id]}]
                         (a/go
@@ -148,9 +148,9 @@
 (defn init-materialize-ui []
   (js/M.AutoInit)
   #_(js/document.addEventListener "DOMContentLoaded"
-                                (fn []
-                                  (let [elements (js/document.querySelectorAll ".sidenav")]
-                                    (.init js/M.Sidenav elements)))))
+                                  (fn []
+                                    (let [elements (js/document.querySelectorAll ".sidenav")]
+                                      (.init js/M.Sidenav elements)))))
 
 (defn nav-bar []
   [:div
@@ -193,3 +193,57 @@
 (defn init []
   (let [app (js/document.getElementById "app")]
     (rdom/render [map-view] app)))
+
+(comment
+  (require '[clojure.data.csv :as csv]
+           '[clojure.java.io :as io])
+
+  (defn create-agents [agent-csv family-network-csv & [num-of-agent]]
+    (let [num-of-agent (when num-of-agent
+                         (inc num-of-agent))
+          family-network-lines (future (with-open [family-reader (io/reader family-network-csv)]
+                                         (prn "read family")
+                                         (if num-of-agent
+                                           (doall (take num-of-agent (csv/read-csv family-reader)))
+                                           (doall (csv/read-csv family-reader)))))          
+          agent-lines (future (with-open [agent-reader (io/reader agent-csv)]
+                                (prn "read agent")
+                                (if num-of-agent
+                                  (doall (take num-of-agent (csv/read-csv agent-reader)))
+                                  (doall (csv/read-csv agent-reader)))))
+
+          family-network-header (first @family-network-lines)
+          family-network-data (vec (rest @family-network-lines))
+          _ (prn "done reading family")
+          
+          agent-header (first @agent-lines)
+          agent-data (rest @agent-lines)
+          _ (prn "done reading agent")
+          ;;agent-data (take num-of-agent agent-data)
+          i-agent-data (map-indexed (fn [i agent]
+                                      [i agent])
+                                    agent-data)
+          num-of-partition 10000
+          i-agent-data-partitions (partition-all num-of-partition i-agent-data)
+          _ (prn "partition-count " (count i-agent-data-partitions))
+          agent-partitions (pmap (fn [i-agent-data-partition]
+                                   (map (fn [[i [urban age province sex migrant schooling group :as agent]]]
+                                          {:id i
+                                           :urban urban
+                                           :household (first (nth family-network-data i))
+                                           :age age
+                                           :province province
+                                           :sex sex
+                                           :migrant migrant
+                                           :schooling schooling
+                                           :group group})
+                                        i-agent-data-partition))
+                                 i-agent-data-partitions)]
+      (flatten agent-partitions)))
+
+  (def my-agents (create-agents "agent.csv" "family_network.csv" 100))
+  (def my-agents (create-agents "agent.csv" "family_network.csv"))
+  
+  (nth my-agents 2)
+  (last my-agents)
+  )
